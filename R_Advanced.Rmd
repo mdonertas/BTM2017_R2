@@ -1,0 +1,14 @@
+---
+title: "print(\"Hello tidyverse!\")"
+author: "melike"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+# Abstract
+
+In this module, we will introduce the core skills allowing data science to happen! First, we will cover different ways of getting your data into R. Next, we will cover cleaning and transforming data for downstream analysis and visualisation. This will involve introducing the 'tidyverse' concept. These are the core skills you will need to apply every time you analyse data, and this course will introduce the concepts as well as giving tips which will help you save time and effort. 
