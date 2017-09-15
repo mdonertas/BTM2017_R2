@@ -1,3 +1,5 @@
+# Meta-data,,,,,,,,,,,,,
+# BTM2017 - R course,,,,,,,,,,,,,
 ID,Name,Race,Sex,Smokes,Height,Weight,Birth,State,Pet,Grade_Level,Died,Count,Date.Entered.Study
 AC/AH/001,Michael,White,Male,FALSE,182.87cm,76.57kg,06/02/1972,Georgia,Dog,2,FALSE,0.01,01/12/2015
 AC/AH/017,Derek,White,Male,FALSE,179.12cm,80.43kg,15/06/1972,Missouri,Dog,2,FALSE,-1.31,
