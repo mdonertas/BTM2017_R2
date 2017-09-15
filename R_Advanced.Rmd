@@ -1,14 +1,368 @@
 ---
 title: "print(\"Hello tidyverse!\")"
-author: "melike"
-output: html_document
+output:
+  html_document:
+    number_sections: no
+    toc: yes
+  pdf_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(cache = T)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_chunk$set(eval = T)
+```
+
+```{r load knitr,include=F}
+library(knitr)
 ```
 
 # Abstract
 
 In this module, we will introduce the core skills allowing data science to happen! First, we will cover different ways of getting your data into R. Next, we will cover cleaning and transforming data for downstream analysis and visualisation. This will involve introducing the 'tidyverse' concept. These are the core skills you will need to apply every time you analyse data, and this course will introduce the concepts as well as giving tips which will help you save time and effort. 
+
+# Prerequisites / Recommendations
+
+The prerequisites to complete this module are all ready to use in the VM we distributed. If you want to practice or use what you learned using your own computers, you will need the following to run the code:
+
+####1. [R](https://cran.r-project.org/)
+
+####2. [R Studio](http://www.rstudio.com/download)
+
+####3. [Tidyverse](https://www.tidyverse.org/)
+
+The tidyverse is a group of R packages that help data anlysis. The core tidyverse includes:
+
+  * ggplot2: to visualize data
+  * tidyr: to tidy data
+  * readr: to read / import data
+  * dplyr: to manipulate data
+  * tibble: tweaked data frames to make life easier
+  * purrr: a functional programming toolkit
+
+To install the tidyverse package:
+```{r install tidyverse,eval=F}
+install.packages("tidyverse")
+```
+
+####4. Other packages and data:
+
+For the rest of this module, we will be using [patient-data.csv](https://raw.githubusercontent.com/mdonertas/BTM2017_R2/master/patient-data.csv) file which contains various attributes for different patients. 
+
+# Tidy data concept
+
+```{r load tidyverse}
+library(tidyverse)
+```
+
+It is possible to represent the same data in different formats. But tidy dataset is the easiest to work with. If we have tidy data, using tidyverse package, we can spend much less time on data wrangling and focus more on analysis. 
+
+There are 3 interrelated characteristics to define tidy data:
+
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+The following 4 structures all represent the same data but in different ways, and only one of them is tidy.
+
+```{r table1}
+table1
+```
+
+```{r table2}
+table2
+```
+```{r table3}
+table3
+```
+
+Divided into two to represent cases and populations separately:
+```{r table4, collapse=T}
+table4a
+table4b
+```
+
+Which one is tidy? Only table1.
+
+Is there any way to easily tidy other tables? YES! We can use spreading, gathering and joining to tidy these tables!
+
+## Spreading
+
+When one observation is scattered across multiple rows, we use `spread()` function. Take table2 as an example. 
+
+```{r table2.2}
+table2
+```
+
+Each observation is a country per year. However, variables (type and count) are in different rows. To tidy this up we will use `spread()` function with some arguments:
+
+* `key`: the column with variable names - will be the column names in tidy data
+* `value`: the column that contains values forms multiple variables
+
+```{r tidy table2}
+spread(data=table2, key = type, value = count)
+```
+
+## Gathering
+
+It is the opposite of spreading. When one variable might be spread across multiple columns, we use `gather()` function. Take table4a as an example:
+
+```{r table4a}
+table4a
+```
+
+Because, values of the 'year' variable are now column names, each row represents two observations, not one. We will use `gather()` to tidy with the following arguments:
+
+* `key`: the name of the variable whose values form the column names.
+* `value`: the name of the variable whose values are spread over the cells
+* the set of columns that represent values, not variables
+
+```{r tidy table4a}
+table4a.tidy=gather(data = table4a, key = 'year', value = 'cases', '1999', '2000')
+table4a.tidy
+```
+
+Tidy 'table4b' and save new tibble as 'table4b.tidy'.
+
+```{r tidy table4b,echo=T}
+table4b.tidy=gather(data = table4b, key = 'year', value = 'population', '1999', '2000')
+```
+
+## Joining
+
+We have tidied table4a and table4b now. However, since the observations are spreaded over two tibbles, the data is still not tidy. Now, we need to join two tibbles. 
+
+```{r tidy table4}
+table4=full_join(table4a.tidy,table4b.tidy, by=c('country','year'))
+table4
+```
+
+There are different types of joins. Since we have data for the same observations in two tables, we did not need to worry about this. 
+
+* `inner_join()`: return all rows from x where there are matching values in y, and all columns from x and y. If there are multiple matches between x and y, all combination of the matches are returned.
+* `left_join()`: return all rows from x, and all columns from x and y. Rows in x with no match in y will have NA values in the new columns. If there are multiple matches between x and y, all combinations of the matches are returned.
+* `right_join()`: return all rows from y, and all columns from x and y. Rows in y with no match in x will have NA values in the new columns. If there are multiple matches between x and y, all combinations of the matches are returned.
+* `semi_join()`: return all rows from x where there are matching values in y, keeping just columns from x. A semi join differs from an inner join because an inner join will return one row of x for each matching row of y, where a semi join will never duplicate rows of x.
+* `anti_join()`: return all rows from x where there are not matching values in y, keeping just columns from x.
+* `full_join()`: return all rows and all columns from both x and y. Where there are not matching values, returns NA for the one missing.
+
+## Separating
+
+Table 3 has a different type of problem. One column containts two variables. And we will use `separate()` to split these variables into two columns.
+
+```{r}
+table3
+separate(data=table3,col = 'rate',into = c('cases','population'))
+```
+
+# Importing data: readr
+
+Import data into R:
+
+```{r import patient}
+patients=read_csv('./patient-data.csv', comment='#')
+```
+
+Alternatively, if you don't have the data on your computer, you can run:
+
+```{r import patient from github,eval=F}
+patients=read_csv('https://raw.githubusercontent.com/mdonertas/BTM2017_R2/master/patient-data.csv',
+                  comment='#')
+```
+
+
+As you noticed, we did not use the base R function `read.csv()` but preferred using `read_csv()`, which is a tidyverse equivalent. The advantage of using `read_csv()`: 1) It is faster, 2) produce tibbles - does not convert character vectors to factors, and does not cause frustration by changing column names 3) more reproducible - the code has higher chance of working in another computer, running different OS with different language settings etc. 
+
+We specified `comment='#'`, because our file contains meta-data starting with "#" character and we want to skip those lines. There are some other useful arguments you can specify, such as col_names, na, skip, n_max. To learn the use of each argument, run `?read_csv`. To learn how to read files that are not comma separated, please try:
+
+```{r other readr functions,eval=F}
+?read_csv2
+?read_tsv
+?read_fwf
+?read_table
+?read_log
+```
+
+```{r head-patients,collapse=T}
+head(patients)
+```
+
+# Basic tibble manipulation using dplyr
+
+```{r glimpse patients}
+# similar to 'str()' in base R.
+glimpse(patients)
+```
+
+## Selecting columns
+
+In base R, we have "[ ,...]" and "$" operators to select data. 
+
+```{r select baseR,eval=F}
+patients$Name
+patients[,'Name']
+```
+
+However, dplyr offers much more intuitive option: `select()`. To select the column named 'Name':
+
+```{r select1}
+select(patients,Name)
+```
+
+To select multiple columns - named 'Name', 'Smokes', 'Birth':
+
+```{r select2}
+select(patients,Name,Smokes,Birth)
+```
+
+To select multiple columns - named 'Name', and all columns between 'Smokes' and 'Birth':
+
+```{r select3}
+select(patients,ID,Smokes:Birth)
+```
+
+## Filtering the observations
+
+Let's create a tibble with only the females:
+
+```{r filter}
+filter(patients, Sex=='Female')
+```
+
+## Piping
+
+When you want to apply multiple operations to a single object you can choose to use one of the several alternative ways. Let's create a tibble with Name, Height, Weight and Birth of the patients who smokes and are alive males. 
+
+1. Assigning new variables for each intermediate step:
+```{r}
+alive_males=filter(patients, Sex=='Male' & Smokes==T & Died==F)
+alive_male_info=select(alive_males, Name, Height, Weight, Birth)
+alive_male_info
+```
+This is quite straightforward - however, imagine dealing with a huge file. Each time you create a subset, it uses more memory!!
+
+2. Overwriting the existing variable:
+
+```{r, eval=F}
+patients=filter(patients, Sex=='Male' & Smokes==T & Died==F)
+patients=select(patients, Name, Height, Weight, Birth)
+```
+This solves the issue with creating multiple subsets of the data - however, imagine you made a mistake! you need to go to the first step where you uploaded the data. And debugging would be painful if there are many steps! 
+
+3. Function composition
+```{r}
+select(
+  filter(
+    patients, 
+    Sex=='Male' & Smokes==T & Died==F),
+       Name, Height, Weight, Birth)
+```
+Reading this code is easy as we do not have many steps. However, still it is counter-intuitive as you need to read starting from inside to out and right to left. 
+
+4. Piping: This one is easier to read and write because you can focus on the functions not to objects
+
+```{r}
+patients %>%
+  filter(Sex=='Male' & Smokes==T & Died==F) %>%
+  select(Name, Height, Weight, Birth)
+```
+
+It is almost the same as telling R what to do in English - take patients data, filter for smoking alive males and give the name, height, weight and birth.
+
+# Cleaning the variables
+
+1. Let's say we want to calculate the mean height.
+
+```{r}
+patients %>%
+  select(Height) %>%
+  mean()
+```
+
+What is the problem? We have height as a character variable because of the 'cm' at the end of each value. We want to get rid of it. We will use `str_replace_all()` function in 'stringr' package. And we will update the table using `mutate()` function.
+
+```{r}
+library(stringr)
+patients_clean = mutate(patients, Height= as.numeric(str_replace_all(Height,pattern = "cm","")))
+```
+
+Similarly, get rid of 'kg' in Weight using pipe operator and overwrite 'patients_clean' object.
+
+```{r}
+patients_clean = patients_clean %>% 
+  mutate(Weight= as.numeric(str_replace_all(Weight,pattern = "kg","")))
+patients_clean
+```
+
+Now, previous code should work:
+
+```{r}
+patients_clean %>%
+  select(Height, Weight) %>%
+  colMeans()
+```
+
+Alternatively:
+```{r}
+patients_clean %>%
+  summarize(meanHeight=mean(Height),meanWeight=mean(Weight))
+```
+
+2. What is the mean Height and Weight for Females and Males?
+
+```{r}
+patients_clean %>%
+  group_by(Sex) %>%
+  summarize(meanHeight=mean(Height),
+            meanWeight=mean(Weight))
+```
+
+### Exercises
+
+1. Let's say we want to count number of patients who smoke. We first need to clean the Smokes column to contain just TRUE or FALSE values.
+
+```{r}
+patients_clean %>%
+  select(Smokes) %>%
+  table()
+```
+
+2. Calculate the BMI for each patient and add as a column. BMI = (Weight) / (Height in metres)^2
+
+3. There are some other problems with this dataset. Can you find and clean the others? (e.g. Race and Pet columns)
+
+## Working with dates
+
+Let's say we are interested in the age of each patient. We can calculate the age using Birth column. How? 'lubridate' is a quite handy package to work with dates. 
+
+```{r}
+library(lubridate)
+patients_clean= patients_clean %>% 
+  mutate(Age=2017-year(Birth))
+select(patients_clean, ID, Name, Birth, Age)
+```
+
+## Ordering rows
+
+Sort the patients by Height:
+
+```{r}
+arrange(patients_clean,Height)
+```
+
+Sort the patients by Age and then descending order of height. Show Name, Sex, Height and Age.
+
+```{r}
+patients_clean %>%
+  arrange(Age, desc(Height)) %>%
+  select(Name, Sex, Height, Age)
+```
+
+List the patients with top 5 weight: 
+
+```{r}
+top_n(patients_clean,n = 5,wt = Weight)
+```
+
